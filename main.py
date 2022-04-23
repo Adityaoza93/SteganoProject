@@ -7,7 +7,7 @@ def Encode(img, text):
     global fileopen
     with open(os.path.join("tempdir", img.name), "wb") as f:
         f.write(img.getbuffer())
-    FileOpen = "tempdir\\" + img.name
+    FileOpen = "\tempdir\\" + img.name
     stg.hide(FileOpen, "NewImg.jpg", text)
     with open("NewImg.jpg",'rb') as file:
         st.download_button(label="Download Image",file_name='Encoded_Image.png', data=file, mime='image/png')
