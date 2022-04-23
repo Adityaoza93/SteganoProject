@@ -5,18 +5,18 @@ from PIL import Image
 
 def Encode(img, text):
     global fileopen
-    with open(os.path.join("tempdir", img.name), "wb") as f:
+    with open(os.path.join("", img.name), "wb") as f:
         f.write(img.getbuffer())
-    FileOpen = "\tempdir\\" + img.name
+    FileOpen = "" + img.name
     stg.hide(FileOpen, "NewImg.jpg", text)
     with open("NewImg.jpg",'rb') as file:
         st.download_button(label="Download Image",file_name='Encoded_Image.png', data=file, mime='image/png')
 
 def Decode(dimg):
     global dfileopen
-    with open(os.path.join("tempdir", dimg.name), "wb") as f:
+    with open(os.path.join("", dimg.name), "wb") as f:
         f.write(dimg.getbuffer())
-    dfileopen = "tempdir\\" + dimg.name
+    dfileopen = "" + dimg.name
     text = stg.reveal(dfileopen)
     st.write(text)
 
