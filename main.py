@@ -10,7 +10,7 @@ def Encode(img, text):
     FileOpen = "" + img.name
     stg.hide(FileOpen, "NewImg.jpg", text)
     with open("NewImg.jpg",'rb') as file:
-        st.download_button(label="Download Image",file_name='Encoded_Image.png', data=file, mime='image/png')
+        st.download_button(label="Download Image",file_name='Encoded_Image.jpg', data=file, mime='image/jpg')
 
 def Decode(dimg):
     global dfileopen
