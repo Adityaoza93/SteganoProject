@@ -56,4 +56,4 @@ if imag == 'Image':
             st.image(dimg)
             if st.button("Decode"):
                 text = Decode(dimg)
-                st.download_button("Download Text File", text)
+                st.download_button("Download Text File", text,file_name='Encoded_Text.txt')
