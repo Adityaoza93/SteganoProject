@@ -49,7 +49,8 @@ if imag == 'Image':
                         data = f.readline()
                         if data and st.button("Encode") is not None:Encode(filebyte, data)
     elif imgencd == 'Decode':
-        dimg = st.file_uploader("Upload File", type='jpg')
+        st.subheader('Upload Image as JPG:')
+        dimg = st.file_uploader("", type='jpg')
         if dimg is not None:
             st.image(dimg)
             if st.button("Decode"):Decode(dimg)
