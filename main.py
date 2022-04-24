@@ -19,6 +19,7 @@ def Decode(dimg):
     text = stg.reveal(dfileopen)
     st.header('Decoded Text:')
     st.subheader(text)
+    return text
 
 st.title("Image Steganography")
 st.header("")
@@ -53,4 +54,6 @@ if imag == 'Image':
         dimg = st.file_uploader("", type='jpg')
         if dimg is not None:
             st.image(dimg)
-            if st.button("Decode"):Decode(dimg)
+            if st.button("Decode"):
+                text = Decode(dimg)
+                st.download_button("Download Text File", text)
