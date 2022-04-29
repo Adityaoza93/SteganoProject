@@ -7,7 +7,7 @@ import moviepy.editor as mp
 import steganography
 MAX_COLOR_VALUE = 256
 MAX_BIT_VALUE = 8
-
+#ffmped not given
 def make_image(data, resolution):
     image = Image.new("RGB", resolution)
     image.putdata(data)
