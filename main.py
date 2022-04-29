@@ -1,17 +1,16 @@
 import os
 import wave
-
 import streamlit as st
 from stegano import exifHeader as stg
 from PIL import Image
-
+import moviepy.editor as mp
+import steganography
 MAX_COLOR_VALUE = 256
 MAX_BIT_VALUE = 8
 
 def make_image(data, resolution):
     image = Image.new("RGB", resolution)
     image.putdata(data)
-
     return image
 
 def remove_n_least_significant_bits(value, n):
@@ -110,8 +109,8 @@ if imag == 'Image':
     st.subheader('Type of operation:')
     imgencd = st.radio('', ('Encode', 'Decode'))
     if imgencd == 'Encode':
-        st.subheader('Upload Image as JPG:')
-        filebyte = st.file_uploader("", accept_multiple_files=False, type='jpg')
+        st.subheader('Upload Image:')
+        filebyte = st.file_uploader("", accept_multiple_files=False, type=['jpg', 'png'])
         if filebyte is not None:
             st.image(filebyte)
             st.subheader('Select Option:')
@@ -131,46 +130,35 @@ if imag == 'Image':
                         if data and st.button("Encode") is not None:Encode(filebyte, data)
             elif opt == 'Image':
                 st.subheader('Upload File To Hide:')
-                new_file = st.file_uploader("", accept_multiple_files=False, type=['png', 'jpg', 'jpeg'])
+                new_file = st.file_uploader("", accept_multiple_files=False, type=['png', 'jpg'])
                 if new_file is not None:
-                    try:
-                        with open(os.path.join("",new_file.name), "wb") as f, open(os.path.join("",filebyte.name), "wb") as e:
+                    st.image(new_file)
+                    if st.button("Encode"):
+                        with open(os.path.join("", new_file.name), "wb") as f, open(os.path.join("", filebyte.name), "wb") as e:
                             f.write(new_file.getbuffer())
                             e.write(filebyte.getbuffer())
-                        base_image = Image.open(filebyte.name)
-                        base_image.save(filebyte.name.split('.')[0]+'.tiff', 'TIFF')
-                        base_image = Image.open(filebyte.name.split('.')[0]+'.tiff')
-                        hide_image = Image.open(new_file.name)
-                        hide_image.save(new_file.name.split('.')[0]+'.tiff', 'TIFF')
-                        hide_image = Image.open(new_file.name.split('.')[0]+'.tiff')
-                        encodeimginimg(hide_image, base_image, 2).save("Encoded_Image.jpg")
-                        with open("Encoded_Image.jpg", 'rb') as file:
-                            st.download_button(label="Download Image", file_name='Encoded_Image.jpg', data=file,
-                                           mime='image/jpg')
-                    except:
-                        st.warning("Encoding Error - Please try with other Image!")
+                        os.system("python steganography.py merge --img1="+filebyte.name+" --img2="+new_file.name+" --output="+"res/output.png")
+                        with open("res/output.png", 'rb') as file:
+                            st.download_button(label="Download Image", file_name='Encoded_Image.png', data=file,
+                                                   mime='image/png')
 
 
     elif imgencd == 'Decode':
         st.subheader('Upload Image as JPG:')
-        dimg = st.file_uploader("", type='jpg')
+        dimg = st.file_uploader("", type='png')
         if dimg is not None:
             st.image(dimg)
             if st.button("Decode"):
                 try:
                     text = Decode(dimg)
                 except:
-                    print()
-                try:
-                    with open(os.path.join("",dimg.name), 'wb') as file:
+                    with open(os.path.join("", dimg.name), 'wb') as file:
                         file.write(dimg.getbuffer())
-                    image_to_decode = Image.open(dimg.name)
-                    decodeimginimg(image_to_decode, 2).save('Decoded_Image.jpg')
-                    with open("Decoded_Image.jpg", 'rb') as file:
+                    os.system("python steganography.py unmerge --img="+dimg.name+" --output=res/output2.png")
+                    st.image("res/output2.png")
+                    with open("res/output2.png", 'rb') as file:
                         st.download_button(label="Download Image", file_name='Decoded_Image.jpg', data=file,
                                        mime='image/jpg')
-                except:
-                    st.warning("Decoding Error - Please try with other Image!")
 
 if imag == 'Audio':
     t.title("Audio Steganography")
@@ -182,7 +170,7 @@ if imag == 'Audio':
         if base_audio is not None:
             st.subheader("Enter Text:")
             string = st.text_input("")
-            if st.button("Decode"):
+            if st.button("Encode"):
                 with open(os.path.join("",base_audio.name), 'wb') as aud:
                     aud.write(base_audio.getbuffer())
                 audio = wave.open(base_audio.name, mode="rb")
@@ -215,3 +203,59 @@ if imag == 'Audio':
             st.subheader("Encoded Text:")
             st.markdown(decoded)
             audio.close()
+
+if imag == 'Video':
+    t.title('Video Steganography')
+    st.subheader('Type of operation:')
+    vidopt = st.radio('', ('Encode', 'Decode'))
+    if vidopt == 'Encode':
+        st.subheader("Upload Video as MP4:")
+        vid = st.file_uploader("", accept_multiple_files=False, type='MP4')
+        if vid is not None:
+            with open(os.path.join("", vid.name), 'wb') as file:
+                file.write(vid.getbuffer())
+            st.subheader("Enter Text:")
+            string = st.text_input("")
+            if st.button("Encode") and string is not None:
+                video = mp.VideoFileClip(vid.name)
+                audio = video.audio
+                audio.write_audiofile("sc_audio.wav")
+
+                audio = wave.open("sc_audio.wav", mode="rb")
+                frame_bytes = bytearray(list(audio.readframes(audio.getnframes())))
+                string = string + int((len(frame_bytes) - (len(string) * 8 * 8)) / 8) * '#'
+                bits = list(map(int, ''.join([bin(ord(i)).lstrip('0b').rjust(8, '0') for i in string])))
+                for i, bit in enumerate(bits):
+                    frame_bytes[i] = (frame_bytes[i] & 254) | bit
+                frame_modified = bytes(frame_bytes)
+                newAudio = wave.open('Encoded_Audio.wav', 'wb')
+                newAudio.setparams(audio.getparams())
+                newAudio.writeframes(frame_modified)
+                newAudio.close()
+                audio.close()
+
+                video.set_audio("Encoded_Audio.wav")
+                video.write_videofile("final.mp4", fps=25)
+                with open("final.mp4", 'rb') as file:
+                    st.download_button(label="Download Video", file_name="final.mp4", data=file, mime='video/mp4')
+
+
+    elif vidopt == 'Decode':
+        st.subheader("Upload Video as MP4:")
+        decvid = st.file_uploader("", accept_multiple_files=False, type='mp4')
+        if decvid is not None:
+            with open(os.path.join("", decvid.name), 'wb') as file:
+                file.write(decvid.getbuffer())
+            if st.button("Decode"):
+                video = mp.VideoFileClip(decvid.name)
+                audio = video.audio
+                audio.write_audiofile("dec_audio.wav")
+                audio = wave.open("dec_audio.wav", mode='rb')
+                frame_bytes = bytearray(list(audio.readframes(audio.getnframes())))
+                extracted = [frame_bytes[i] & 1 for i in range(len(frame_bytes))]
+                string = "".join(
+                    chr(int("".join(map(str, extracted[i:i + 8])), 2)) for i in range(0, len(extracted), 8))
+                decoded = string.split("###")[0]
+                st.subheader("Encoded Text:")
+                st.markdown(decoded)
+                audio.close()
