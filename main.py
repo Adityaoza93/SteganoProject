@@ -144,8 +144,8 @@ if imag == 'Image':
 
 
     elif imgencd == 'Decode':
-        st.subheader('Upload Image as JPG:')
-        dimg = st.file_uploader("", type='png')
+        st.subheader('Upload Image:')
+        dimg = st.file_uploader("", type=['jpg', 'png'])
         if dimg is not None:
             st.image(dimg)
             if st.button("Decode"):
