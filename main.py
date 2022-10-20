@@ -4,9 +4,13 @@ import streamlit as st
 from stegano import exifHeader as stg
 from PIL import Image
 import moviepy.editor as mp
+import uuid
 import steganography
 MAX_COLOR_VALUE = 256
 MAX_BIT_VALUE = 8
+
+fileId = str(uuid.uuid4())
+
 #ffmped not given
 def make_image(data, resolution):
     image = Image.new("RGB", resolution)
@@ -86,9 +90,9 @@ def Encode(img, text):
     with open(os.path.join("", img.name), "wb") as f:
         f.write(img.getbuffer())
     FileOpen = "" + img.name
-    stg.hide(FileOpen, "NewImg.jpg", text)
-    with open("NewImg.jpg",'rb') as file:
-        st.download_button(label="Download Image",file_name='Encoded_Image.jpg', data=file, mime='image/jpg')
+    stg.hide(FileOpen, fileId+".jpg", text)
+    with open(fileId+".jpg", 'rb') as file:
+        st.download_button(label="Download Image", file_name=fileId+".jpg", data=file, mime='image/jpg')
 
 def Decode(dimg):
     global dfileopen
@@ -97,11 +101,11 @@ def Decode(dimg):
     dfileopen = "" + dimg.name
     text = stg.reveal(dfileopen)
     st.header('Decoded Text:')
-    st.subheader(text)
+    st.subheader(text.decode())
     return text
 
 t = st.title("Image Steganography")
-st.header("")
+st.subheader("Data that is to be hidden should always be less than the size of the base data!")
 st.header("")
 st.subheader('Select the type of file:')
 imag = st.radio('', ('Image', 'Audio', 'Video'))
@@ -137,9 +141,9 @@ if imag == 'Image':
                         with open(os.path.join("", new_file.name), "wb") as f, open(os.path.join("", filebyte.name), "wb") as e:
                             f.write(new_file.getbuffer())
                             e.write(filebyte.getbuffer())
-                        os.system("python steganography.py merge --img1="+filebyte.name+" --img2="+new_file.name+" --output="+"res/output.png")
-                        with open("res/output.png", 'rb') as file:
-                            st.download_button(label="Download Image", file_name='Encoded_Image.png', data=file,
+                        os.system("python steganography.py merge --img1="+filebyte.name+" --img2="+new_file.name+" --output="+"res/"+fileId+".png")
+                        with open("res/"+fileId+".png", 'rb') as file:
+                            st.download_button(label="Download Image", file_name=fileId+".png", data=file,
                                                    mime='image/png')
 
 
@@ -154,10 +158,10 @@ if imag == 'Image':
                 except:
                     with open(os.path.join("", dimg.name), 'wb') as file:
                         file.write(dimg.getbuffer())
-                    os.system("python steganography.py unmerge --img="+dimg.name+" --output=res/output2.png")
-                    st.image("res/output2.png")
-                    with open("res/output2.png", 'rb') as file:
-                        st.download_button(label="Download Image", file_name='Decoded_Image.jpg', data=file,
+                    os.system("python steganography.py unmerge --img="+dimg.name+" --output=res/"+fileId+".png")
+                    st.image("res/"+fileId+".png")
+                    with open("res/"+fileId+".png", 'rb') as file:
+                        st.download_button(label="Download Image", file_name=fileId+".jpg", data=file,
                                        mime='image/jpg')
 
 if imag == 'Audio':
